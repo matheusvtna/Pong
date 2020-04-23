@@ -5,4 +5,5 @@ O jogo é um exemplo de Bootloader em duas etapas e foi feito com o intuito de s
 
 Execução do projeto:
 $ git clone https://github.com/matheusvtna/Pong.git
+
 $ make all
