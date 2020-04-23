@@ -6,7 +6,7 @@ jmp 0x0000:main
 ; Window
 windowWidth     dw 140h 
 windowHeight    dw 0C8h
-windowBounds    dw 006h
+windowBounds    dw 6
 
 ; Ball variabels
 xBall           dw 0A0h
@@ -19,11 +19,11 @@ yBallOriginal   dw 64h
 
 ; Paddles
 xPaddleLeft     dw 0Ah
-yPaddleLeft     dw 0Ah
+yPaddleLeft     dw 52h
 xPaddleRight    dw 130h
-yPaddleRight    dw 0Ah
+yPaddleRight    dw 52h
 paddleWidth     dw 05h
-paddleHeight    dw 0Fh
+paddleHeight    dw 1Fh
 paddleVelocity  dw 05h
 
 ; Colors
@@ -128,13 +128,13 @@ moveBall:
 
     mov ax, word[windowBounds]
     cmp word[yBall], ax
-    jl resetPosition
+    jl negVelocity
 
     mov ax, word[windowHeight]
     sub ax, word[sizeBall]
     sub ax, word[windowBounds]
     cmp word[yBall], ax
-    jg resetPosition
+    jg negVelocity
 
     ; Check collision with the right paddle
     mov ax, word[xBall]
@@ -164,12 +164,41 @@ moveBall:
 
     ; Check collision with the left paddle
     checkCollisionWithLefttPaddle:
-        
+        mov ax, word[xBall]
+        add ax, word[sizeBall]
+        cmp ax, word[xPaddleLeft]
+        jng exit    
 
-    ret
+        mov ax, word[xPaddleLeft]
+        add ax, word[paddleWidth]
+        cmp word[xBall], ax
+        jnl exit
+
+        mov ax, word[yBall]
+        add ax, word[sizeBall]
+        cmp ax, word[yPaddleLeft]
+        jng exit
+
+        mov ax, word[yPaddleLeft]
+        add ax, word[paddleHeight]
+        cmp word[yBall], ax
+        jnl exit
+
+        ; The ball is colliding with the left ball
+        neg word[xBallVelocity]
+
+        ret
 
     resetPosition:
         call resetBallPosition
+        ret
+
+    negVelocity:
+        neg word[yBallVelocity]
+        ret
+
+    exit:
+
 ret
 
 drawPaddles:
@@ -342,8 +371,5 @@ delay:
   int 15h
 
 ret
-
-times 510-($-$$) db 0
-dw 0xaa55
 
 
