@@ -1,4 +1,4 @@
-org 0x7c00
+org 0x7e00
 jmp 0x0000:main
 
 ; ------------- DATA ------------- 
@@ -17,9 +17,6 @@ yBallVelocity   dw 02h
 xBallOriginal   dw 0A0h
 yBallOriginal   dw 64h
 
-; Time
-timeAux         db 0 
-
 ; Paddles
 xPaddleLeft     dw 0Ah
 yPaddleLeft     dw 0Ah
@@ -32,19 +29,7 @@ paddleVelocity  dw 05h
 ; Colors
 black           equ 0
 blue            equ 1 
-darkgreen       equ 2
-darkcyan        equ 3
-dark_red        equ 4
-magenta         equ 5
-brown           equ 6
-grey            equ 7
-darkgrey        equ 8
-purple          equ 9
-green           equ 10
-cyan            equ 11
 red             equ 12
-pink            equ 13
-yellow          equ 14
 white           equ 15
 
 ; ------------- CODE ------------- 
@@ -150,6 +135,36 @@ moveBall:
     sub ax, word[windowBounds]
     cmp word[yBall], ax
     jg resetPosition
+
+    ; Check collision with the right paddle
+    mov ax, word[xBall]
+    add ax, word[sizeBall]
+    cmp ax, word[xPaddleRight]
+    jng checkCollisionWithLefttPaddle    
+
+    mov ax, word[xPaddleRight]
+    add ax, word[paddleWidth]
+    cmp word[xBall], ax
+    jnl checkCollisionWithLefttPaddle
+
+    mov ax, word[yBall]
+    add ax, word[sizeBall]
+    cmp ax, word[yPaddleRight]
+    jng checkCollisionWithLefttPaddle
+
+    mov ax, word[yPaddleRight]
+    add ax, word[paddleHeight]
+    cmp word[yBall], ax
+    jnl checkCollisionWithLefttPaddle
+
+    ; The ball is colliding with the right ball
+    neg word[xBallVelocity]
+
+    ret
+
+    ; Check collision with the left paddle
+    checkCollisionWithLefttPaddle:
+        
 
     ret
 
@@ -327,14 +342,6 @@ delay:
   int 15h
 
 ret
-
-; revertVelocityX:
-;     neg word[xBallVelocity]
-;     ret
-
-; revertVelocityY:
-;     neg word[yBallVelocity]
-;     ret
 
 times 510-($-$$) db 0
 dw 0xaa55
