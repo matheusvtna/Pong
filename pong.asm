@@ -27,6 +27,7 @@ xPaddleRight    dw 130h
 yPaddleRight    dw 0Ah
 paddleWidth     dw 05h
 paddleHeight    dw 0Fh
+paddleVelocity  dw 05h
 
 ; Colors
 black           equ 0
@@ -58,6 +59,8 @@ main:
         call clearScreen
         call moveBall
         call drawBall
+
+        call movePaddles
         call drawPaddles
 
         call delay
@@ -209,6 +212,114 @@ drawPaddles:
 
 ret      
 
+movePaddles:
+    ; ---- Left paddle ----
+    
+    ; Check keyboard buffer
+    mov ah, 01h
+    int 16h
+    jz checkRightPaddleMovement
+
+    mov ah, 00h
+    int 16h
+
+    ; Up movement
+    cmp al, 'w' 
+    je moveUpLeftPaddle
+    cmp al, 'W'
+    je moveUpLeftPaddle
+
+    ; Down movement
+    cmp al, 's' 
+    je moveDownLeftPaddle
+    cmp al, 'S'
+    je moveDownLeftPaddle
+    
+    jmp checkRightPaddleMovement 
+
+    moveUpLeftPaddle:
+        mov ax, word[paddleVelocity]
+        sub word[yPaddleLeft], ax
+
+        mov ax, word[windowBounds]
+        cmp word[yPaddleLeft], ax
+        jl fixPaddleLeftTopPosition
+    
+        jmp checkRightPaddleMovement
+
+        fixPaddleLeftTopPosition:
+            mov ax, word[windowBounds]
+            mov word[yPaddleLeft], ax
+            jmp checkRightPaddleMovement
+
+    moveDownLeftPaddle:
+        mov ax, word[paddleVelocity]
+        add word[yPaddleLeft], ax
+
+        mov ax, word[windowHeight]
+        sub ax, word[windowBounds]
+        sub ax, word[paddleHeight]
+        cmp word[yPaddleLeft], ax
+        jg fixPaddleLeftBottomPosition
+
+        jmp checkRightPaddleMovement
+
+        fixPaddleLeftBottomPosition:
+            mov word[yPaddleLeft], ax
+            jmp checkRightPaddleMovement
+
+
+    ; ---- Right paddle ----    
+    checkRightPaddleMovement:
+        ; Up movement
+        cmp al, 'o' 
+        je moveUpRightPaddle
+        cmp al, 'O'
+        je moveUpRightPaddle
+
+        ; Down movement
+        cmp al, 'l' 
+        je moveDownRightPaddle
+        cmp al, 'L'
+        je moveDownRightPaddle
+        
+        jmp done 
+
+        moveUpRightPaddle:
+            mov ax, word[paddleVelocity]
+            sub word[yPaddleRight], ax
+
+            mov ax, word[windowBounds]
+            cmp word[yPaddleRight], ax
+            jl fixPaddleRightTopPosition
+        
+            jmp done
+
+            fixPaddleRightTopPosition:
+                mov ax, word[windowBounds]
+                mov word[yPaddleRight], ax
+                jmp done
+
+        moveDownRightPaddle:
+            mov ax, word[paddleVelocity]
+            add word[yPaddleRight], ax
+
+            mov ax, word[windowHeight]
+            sub ax, word[windowBounds]
+            sub ax, word[paddleHeight]
+            cmp word[yPaddleRight], ax
+            jg fixPaddleRightBottomPosition
+
+            jmp done
+
+            fixPaddleRightBottomPosition:
+                mov word[yPaddleRight], ax
+                jmp done
+        
+    done:
+
+ret
+
 delay:              
   mov cx, 00h
   mov dx, 86a0h
@@ -217,13 +328,13 @@ delay:
 
 ret
 
-revertVelocityX:
-    neg word[xBallVelocity]
-    ret
+; revertVelocityX:
+;     neg word[xBallVelocity]
+;     ret
 
-revertVelocityY:
-    neg word[yBallVelocity]
-    ret
+; revertVelocityY:
+;     neg word[yBallVelocity]
+;     ret
 
 times 510-($-$$) db 0
 dw 0xaa55
